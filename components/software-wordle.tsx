@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { AlertCircle, CheckCircle2, HelpCircle, ArrowUp, ArrowDown, Check } from "lucide-react"
+import { AlertCircle, CheckCircle2, HelpCircle, ArrowUp, ArrowDown } from "lucide-react"
 import { SoftwareTerm, softwareTerms } from "@/data/software-terms"
 
 type Guess = {
@@ -30,6 +30,11 @@ export default function SoftwareWordle() {
   const [error, setError] = useState<string | null>(null)
   const [showHints, setShowHints] = useState(false)
   const maxAttempts = 6
+
+  const codeSnippetParts = useMemo(() => {
+    if (!targetTerm) return [];
+    return targetTerm.codeSnippet.split("\n"); // Split by lines
+  }, [targetTerm]);
 
   useEffect(() => {
     // Select a random software term when the component mounts
@@ -82,6 +87,8 @@ export default function SoftwareWordle() {
       setGameStatus("lost")
     }
   }
+
+  const revealedCodeParts = guesses.length > 0 ? codeSnippetParts.slice(0, Math.min(guesses.length, 5)) : [];
 
   const calculateYearFeedback = (guessYear: number, targetYear: number): { status: "correct" | "related" | "incorrect", direction?: "higher" | "lower" } => {
     if (guessYear === targetYear) return { status: "correct" }
@@ -202,8 +209,6 @@ export default function SoftwareWordle() {
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-bold text-center mb-6">Software Terminology Wordle</h1>
-
       {gameStatus === "playing" && (
         <div className="mb-6">
           <div className="flex gap-2 mb-2">
@@ -219,33 +224,7 @@ export default function SoftwareWordle() {
               list="term-suggestions"
             />
             <Button onClick={handleGuess}>Guess</Button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button variant="outline" size="icon" onClick={toggleHints}>
-                    <HelpCircle className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Show available terms</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
           </div>
-
-          {showHints && (
-            <div className="mt-2 p-3 bg-gray-50 rounded-md border max-h-40 overflow-y-auto">
-              <p className="font-semibold mb-1">Available terms:</p>
-              <div className="flex flex-wrap gap-1">
-                {getAvailableTerms().map((term, index) => (
-                  <Badge key={index} variant="outline" className="cursor-pointer" onClick={() => setCurrentGuess(term)}>
-                    {term}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          )}
-
           {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
         </div>
       )}
@@ -292,6 +271,17 @@ export default function SoftwareWordle() {
               <div className="font-semibold">Company:</div>
               <div>{targetTerm.company}</div>
             </div>
+          </div>
+        )}
+
+        {gameStatus === "playing" && revealedCodeParts.length > 0 && (
+          <div className="mb-6 p-4 bg-gray-100 rounded-lg border">
+            <h3 className="font-bold mb-2">Code Hint:</h3>
+            <pre className="text-sm font-mono">
+              {revealedCodeParts.map((part, index) => (
+                <div key={index}>{part}</div>
+              ))}
+            </pre>
           </div>
         )}
 
@@ -353,7 +343,7 @@ export default function SoftwareWordle() {
               </tr>
             </thead>
             <tbody>
-              {guesses.map((guess, index) => (
+              {guesses.slice().reverse().map((guess, index) => (
                 <tr key={index} className="border-t">
                   <td className="px-4 py-3">
                     <div className="font-medium">{guess.term}</div>
