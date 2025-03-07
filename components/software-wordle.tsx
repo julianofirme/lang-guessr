@@ -451,9 +451,9 @@ export default function SoftwareWordle() {
             <span className="mr-2">•</span>
             <span>For the <strong>Year</strong> column: The guessed year is shown with background color:
               <div className="flex items-center mt-1 gap-2">
-                <span className="w-6 h-6 bg-green-500 rounded-md"></span> Exact match
-                <span className="w-6 h-6 bg-yellow-500 rounded-md"></span> Within 3 years
-                <span className="w-6 h-6 bg-gray-500 rounded-md"></span> More than 3 years away
+                <span className="w-4 h-4 bg-green-500 rounded-sm"></span> Exact match
+                <span className="w-4 h-4 bg-yellow-500 rounded-sm"></span> Within 3 years
+                <span className="w-4 h-4 bg-gray-500 rounded-sm"></span> More than 3 years away
               </div>
               An arrow (↑ or ↓) indicates if the target year is higher or lower when not correct.
             </span>
@@ -462,15 +462,11 @@ export default function SoftwareWordle() {
             <span className="mr-2">•</span>
             <span>For other categories: The guessed value is shown with background color:
               <div className="flex items-center mt-1 gap-2">
-                <span className="w-6 h-6 bg-green-500 rounded-md"></span> Exact match
-                <span className="w-6 h-6 bg-yellow-500 rounded-md"></span> Related
-                <span className="w-6 h-6 bg-gray-500 rounded-md"></span> Not related
+                <span className="w-4 h-4 bg-green-500 rounded-sm"></span> Exact match
+                <span className="w-4 h-4 bg-yellow-500 rounded-sm"></span> Related
+                <span className="w-4 h-4 bg-gray-500 rounded-sm"></span> Not related
               </div>
             </span>
-          </li>
-          <li className="flex items-start">
-            <span className="mr-2">•</span>
-            <span>Hover over cells after the game ends to see the correct answers for incorrect guesses</span>
           </li>
           <li className="flex items-start">
             <span className="mr-2">•</span>
