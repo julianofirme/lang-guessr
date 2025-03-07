@@ -4,9 +4,8 @@ import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { AlertCircle, CheckCircle2, HelpCircle, ArrowUp, ArrowDown } from "lucide-react"
+import { AlertCircle, CheckCircle2, ArrowUp, ArrowDown } from "lucide-react"
 import { SoftwareTerm, softwareTerms } from "@/data/software-terms"
 
 type Guess = {
@@ -28,7 +27,6 @@ export default function SoftwareWordle() {
   const [currentGuess, setCurrentGuess] = useState("")
   const [gameStatus, setGameStatus] = useState<"playing" | "won" | "lost">("playing")
   const [error, setError] = useState<string | null>(null)
-  const [showHints, setShowHints] = useState(false)
   const maxAttempts = 6
 
   const codeSnippetParts = useMemo(() => {
@@ -170,7 +168,6 @@ export default function SoftwareWordle() {
     setCurrentGuess("")
     setGameStatus("playing")
     setError(null)
-    setShowHints(false)
   }
 
   const getFeedbackColor = (feedback: "correct" | "related" | "incorrect") => {
@@ -182,14 +179,6 @@ export default function SoftwareWordle() {
       case "incorrect":
         return "bg-gray-500"
     }
-  }
-
-  const getAvailableTerms = () => {
-    return softwareTerms.map(term => term.name).sort()
-  }
-
-  const toggleHints = () => {
-    setShowHints(!showHints)
   }
 
   const getCategoryDescription = (category: string): string => {
