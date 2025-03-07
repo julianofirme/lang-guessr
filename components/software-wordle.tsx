@@ -4,7 +4,9 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { AlertCircle, CheckCircle2 } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { AlertCircle, CheckCircle2, HelpCircle, ArrowUp, ArrowDown, Check } from "lucide-react"
 import { softwareTerms } from "@/data/software-terms"
 
 type SoftwareTerm = {
@@ -18,8 +20,10 @@ type SoftwareTerm = {
 
 type Guess = {
   term: string
+  termData: SoftwareTerm
   feedback: {
     releaseYear: "correct" | "related" | "incorrect"
+    yearDirection?: "higher" | "lower"
     primaryPurpose: "correct" | "related" | "incorrect"
     category1: "correct" | "related" | "incorrect"
     category2: "correct" | "related" | "incorrect"
@@ -33,12 +37,13 @@ export default function SoftwareWordle() {
   const [currentGuess, setCurrentGuess] = useState("")
   const [gameStatus, setGameStatus] = useState<"playing" | "won" | "lost">("playing")
   const [error, setError] = useState<string | null>(null)
+  const [showHints, setShowHints] = useState(false)
   const maxAttempts = 6
 
   useEffect(() => {
     // Select a random software term when the component mounts
     const randomIndex = Math.floor(Math.random() * softwareTerms.length)
-    setTargetTerm(softwareTerms[1])
+    setTargetTerm(softwareTerms[randomIndex])
   }, [])
 
   const handleGuess = () => {
@@ -59,8 +64,10 @@ export default function SoftwareWordle() {
     setError(null)
 
     // Calculate feedback
+    const yearFeedback = calculateYearFeedback(guessedTerm.releaseYear, targetTerm.releaseYear)
     const feedback = {
-      releaseYear: calculateYearFeedback(guessedTerm.releaseYear, targetTerm.releaseYear),
+      releaseYear: yearFeedback.status,
+      yearDirection: yearFeedback.direction,
       primaryPurpose: calculateStringFeedback(guessedTerm.primaryPurpose, targetTerm.primaryPurpose),
       category1: calculateStringFeedback(guessedTerm.category1, targetTerm.category1),
       category2: calculateStringFeedback(guessedTerm.category2, targetTerm.category2),
@@ -69,6 +76,7 @@ export default function SoftwareWordle() {
 
     const newGuess: Guess = {
       term: guessedTerm.name,
+      termData: guessedTerm,
       feedback,
     }
 
@@ -84,32 +92,77 @@ export default function SoftwareWordle() {
     }
   }
 
-  const calculateYearFeedback = (guessYear: number, targetYear: number): "correct" | "related" | "incorrect" => {
-    if (guessYear === targetYear) return "correct"
-    if (Math.abs(guessYear - targetYear) <= 3) return "related"
-    return "incorrect"
+  const calculateYearFeedback = (guessYear: number, targetYear: number): { status: "correct" | "related" | "incorrect", direction?: "higher" | "lower" } => {
+    if (guessYear === targetYear) return { status: "correct" }
+    if (Math.abs(guessYear - targetYear) <= 3) {
+      return { 
+        status: "related", 
+        direction: guessYear > targetYear ? "higher" : "lower" 
+      }
+    }
+    return { 
+      status: "incorrect", 
+      direction: guessYear > targetYear ? "higher" : "lower" 
+    }
   }
 
   const calculateStringFeedback = (guessValue: string, targetValue: string): "correct" | "related" | "incorrect" => {
+    // Exact match
     if (guessValue.toLowerCase() === targetValue.toLowerCase()) return "correct"
-
-    // Check if there are common words between the two strings
-    const guessWords = guessValue.toLowerCase().split(/\s+/)
-    const targetWords = targetValue.toLowerCase().split(/\s+/)
-
-    for (const word of guessWords) {
-      if (word.length > 2 && targetWords.includes(word)) return "related"
-    }
-
-    // Check if they're related based on common substrings
-    if (
-      guessValue.toLowerCase().includes(targetValue.toLowerCase()) ||
-      targetValue.toLowerCase().includes(guessValue.toLowerCase())
-    ) {
+    
+    // Normalize strings for comparison
+    const normalizedGuess = guessValue.toLowerCase().trim()
+    const normalizedTarget = targetValue.toLowerCase().trim()
+    
+    // Check for direct substring relationship
+    if (normalizedGuess.includes(normalizedTarget) || 
+        normalizedTarget.includes(normalizedGuess)) {
       return "related"
     }
-
+    
+    // Check for common words - improved to handle technical terms better
+    const guessWords = normalizedGuess.split(/[\s-.,;:]+/).filter(word => word.length > 1)
+    const targetWords = normalizedTarget.split(/[\s-.,;:]+/).filter(word => word.length > 1)
+    
+    // Count matching words
+    const matchingWords = guessWords.filter(word => targetWords.includes(word))
+    if (matchingWords.length > 0) {
+      return "related"
+    }
+    
+    // Check for Levenshtein distance for similar terms
+    if (levenshteinDistance(normalizedGuess, normalizedTarget) <= 3) {
+      return "related"
+    }
+    
     return "incorrect"
+  }
+  
+  // Helper function for Levenshtein distance to find similar words
+  function levenshteinDistance(str1: string, str2: string): number {
+    const track = Array(str2.length + 1).fill(null).map(() => 
+      Array(str1.length + 1).fill(null))
+    
+    for (let i = 0; i <= str1.length; i += 1) {
+      track[0][i] = i
+    }
+    
+    for (let j = 0; j <= str2.length; j += 1) {
+      track[j][0] = j
+    }
+    
+    for (let j = 1; j <= str2.length; j += 1) {
+      for (let i = 1; i <= str1.length; i += 1) {
+        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1
+        track[j][i] = Math.min(
+          track[j][i - 1] + 1, // deletion
+          track[j - 1][i] + 1, // insertion
+          track[j - 1][i - 1] + indicator, // substitution
+        )
+      }
+    }
+    
+    return track[str2.length][str1.length]
   }
 
   const resetGame = () => {
@@ -119,6 +172,7 @@ export default function SoftwareWordle() {
     setCurrentGuess("")
     setGameStatus("playing")
     setError(null)
+    setShowHints(false)
   }
 
   const getFeedbackColor = (feedback: "correct" | "related" | "incorrect") => {
@@ -132,11 +186,21 @@ export default function SoftwareWordle() {
     }
   }
 
+  const getAvailableTerms = () => {
+    return softwareTerms.map(term => term.name).sort()
+  }
+
+  const toggleHints = () => {
+    setShowHints(!showHints)
+  }
+
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div className="w-full max-w-3xl mx-auto p-4">
+      <h1 className="text-2xl font-bold text-center mb-6">Software Terminology Wordle</h1>
+      
       {gameStatus === "playing" && (
         <div className="mb-6">
-          <div className="flex gap-2">
+          <div className="flex gap-2 mb-2">
             <Input
               type="text"
               value={currentGuess}
@@ -146,9 +210,36 @@ export default function SoftwareWordle() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") handleGuess()
               }}
+              list="term-suggestions"
             />
             <Button onClick={handleGuess}>Guess</Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button variant="outline" size="icon" onClick={toggleHints}>
+                    <HelpCircle className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Show available terms</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
+          
+          {showHints && (
+            <div className="mt-2 p-3 bg-gray-50 rounded-md border max-h-40 overflow-y-auto">
+              <p className="font-semibold mb-1">Available terms:</p>
+              <div className="flex flex-wrap gap-1">
+                {getAvailableTerms().map((term, index) => (
+                  <Badge key={index} variant="outline" className="cursor-pointer" onClick={() => setCurrentGuess(term)}>
+                    {term}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+          
           {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
         </div>
       )}
@@ -198,63 +289,205 @@ export default function SoftwareWordle() {
           </div>
         )}
 
-        <div className="grid grid-cols-6 gap-2 font-semibold text-center mb-2">
-          <div>Term</div>
-          <div>Year</div>
-          <div>Purpose</div>
-          <div>Cat 1</div>
-          <div>Cat 2</div>
-          <div>Cat 3</div>
+        <div className="relative overflow-x-auto rounded-lg border">
+          <table className="w-full">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-4 py-2 text-left">Term</th>
+                <th className="px-3 py-2 text-center">Year</th>
+                <th className="px-3 py-2 text-center">Purpose</th>
+                <th className="px-3 py-2 text-center">Cat 1</th>
+                <th className="px-3 py-2 text-center">Cat 2</th>
+                <th className="px-3 py-2 text-center">Cat 3</th>
+              </tr>
+            </thead>
+            <tbody>
+              {guesses.map((guess, index) => (
+                <tr key={index} className="border-t">
+                  <td className="px-4 py-3">
+                    <div className="font-medium">{guess.term}</div>
+                    {gameStatus !== "playing" && (
+                      <div className="text-xs text-gray-500 mt-1">{guess.termData.releaseYear}</div>
+                    )}
+                  </td>
+                  <td className="px-2 py-3">
+                    <div className={`flex items-center justify-center ${getFeedbackColor(guess.feedback.releaseYear)} text-white rounded-md p-2`}>
+                      {guess.feedback.releaseYear === "correct" ? (
+                        <Check className="h-4 w-4" />
+                      ) : guess.feedback.yearDirection === "higher" ? (
+                        <ArrowDown className="h-4 w-4" />
+                      ) : (
+                        <ArrowUp className="h-4 w-4" />
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-2 py-3">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className={`${getFeedbackColor(guess.feedback.primaryPurpose)} text-white rounded-md p-2 text-center cursor-help`}>
+                            {guess.feedback.primaryPurpose === "correct" ? (
+                              <Check className="h-4 w-4 mx-auto" />
+                            ) : guess.feedback.primaryPurpose === "related" ? (
+                              "≈"
+                            ) : (
+                              "✗"
+                            )}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="font-medium">Your guess:</p>
+                          <p>{guess.termData.primaryPurpose}</p>
+                          {guess.feedback.primaryPurpose !== "correct" && gameStatus !== "playing" && (
+                            <>
+                              <p className="font-medium mt-1">Correct answer:</p>
+                              <p>{targetTerm?.primaryPurpose}</p>
+                            </>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </td>
+                  <td className="px-2 py-3">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className={`${getFeedbackColor(guess.feedback.category1)} text-white rounded-md p-2 text-center cursor-help`}>
+                            {guess.feedback.category1 === "correct" ? (
+                              <Check className="h-4 w-4 mx-auto" />
+                            ) : guess.feedback.category1 === "related" ? (
+                              "≈"
+                            ) : (
+                              "✗"
+                            )}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="font-medium">Your guess:</p>
+                          <p>{guess.termData.category1}</p>
+                          {guess.feedback.category1 !== "correct" && gameStatus !== "playing" && (
+                            <>
+                              <p className="font-medium mt-1">Correct answer:</p>
+                              <p>{targetTerm?.category1}</p>
+                            </>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </td>
+                  <td className="px-2 py-3">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className={`${getFeedbackColor(guess.feedback.category2)} text-white rounded-md p-2 text-center cursor-help`}>
+                            {guess.feedback.category2 === "correct" ? (
+                              <Check className="h-4 w-4 mx-auto" />
+                            ) : guess.feedback.category2 === "related" ? (
+                              "≈"
+                            ) : (
+                              "✗"
+                            )}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="font-medium">Your guess:</p>
+                          <p>{guess.termData.category2}</p>
+                          {guess.feedback.category2 !== "correct" && gameStatus !== "playing" && (
+                            <>
+                              <p className="font-medium mt-1">Correct answer:</p>
+                              <p>{targetTerm?.category2}</p>
+                            </>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </td>
+                  <td className="px-2 py-3">
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className={`${getFeedbackColor(guess.feedback.category3)} text-white rounded-md p-2 text-center cursor-help`}>
+                            {guess.feedback.category3 === "correct" ? (
+                              <Check className="h-4 w-4 mx-auto" />
+                            ) : guess.feedback.category3 === "related" ? (
+                              "≈"
+                            ) : (
+                              "✗"
+                            )}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="font-medium">Your guess:</p>
+                          <p>{guess.termData.category3}</p>
+                          {guess.feedback.category3 !== "correct" && gameStatus !== "playing" && (
+                            <>
+                              <p className="font-medium mt-1">Correct answer:</p>
+                              <p>{targetTerm?.category3}</p>
+                            </>
+                          )}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </td>
+                </tr>
+              ))}
+              {guesses.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="text-center p-4 text-gray-500">
+                    Make your first guess to start the game!
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-
-        {guesses.map((guess, index) => (
-          <div key={index} className="grid grid-cols-6 gap-2 text-center">
-            <div className="font-medium">{guess.term}</div>
-            <div className={`${getFeedbackColor(guess.feedback.releaseYear)} text-white rounded p-1`}>
-              {guess.feedback.releaseYear === "correct" ? "✓" : guess.feedback.releaseYear === "related" ? "≈" : "✗"}
-            </div>
-            <div className={`${getFeedbackColor(guess.feedback.primaryPurpose)} text-white rounded p-1`}>
-              {guess.feedback.primaryPurpose === "correct"
-                ? "✓"
-                : guess.feedback.primaryPurpose === "related"
-                  ? "≈"
-                  : "✗"}
-            </div>
-            <div className={`${getFeedbackColor(guess.feedback.category1)} text-white rounded p-1`}>
-              {guess.feedback.category1 === "correct" ? "✓" : guess.feedback.category1 === "related" ? "≈" : "✗"}
-            </div>
-            <div className={`${getFeedbackColor(guess.feedback.category2)} text-white rounded p-1`}>
-              {guess.feedback.category2 === "correct" ? "✓" : guess.feedback.category2 === "related" ? "≈" : "✗"}
-            </div>
-            <div className={`${getFeedbackColor(guess.feedback.category3)} text-white rounded p-1`}>
-              {guess.feedback.category3 === "correct" ? "✓" : guess.feedback.category3 === "related" ? "≈" : "✗"}
-            </div>
-          </div>
-        ))}
-
-        {guesses.length === 0 && (
-          <div className="text-center p-4 border rounded-lg bg-gray-50">Make your first guess to start the game!</div>
-        )}
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
         <h3 className="font-bold mb-2">How to Play:</h3>
-        <ul className="list-disc pl-5 space-y-1">
-          <li>Guess a software term (programming language, framework, library, tool)</li>
-          <li>Get feedback on how close your guess is to the target</li>
-          <li>
-            <span className="inline-block w-4 h-4 bg-green-500 rounded-full"></span> Green: Exact match
+        <ul className="space-y-2 pl-5">
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>Guess a software term (programming language, framework, library, tool)</span>
           </li>
-          <li>
-            <span className="inline-block w-4 h-4 bg-yellow-500 rounded-full"></span> Yellow: Related but not exact
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>For the <strong>Year</strong> column:
+              <div className="flex items-center mt-1 gap-2">
+                <span className="inline-block w-6 h-6 bg-green-500 rounded-md flex items-center justify-center text-white">
+                  <Check className="h-4 w-4" />
+                </span> Exact match
+                <span className="inline-block w-6 h-6 bg-yellow-500 rounded-md flex items-center justify-center text-white">
+                  <ArrowUp className="h-4 w-4" />
+                </span> Target is newer
+                <span className="inline-block w-6 h-6 bg-yellow-500 rounded-md flex items-center justify-center text-white">
+                  <ArrowDown className="h-4 w-4" />
+                </span> Target is older
+              </div>
+            </span>
           </li>
-          <li>
-            <span className="inline-block w-4 h-4 bg-gray-500 rounded-full"></span> Gray: Not related
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>For other categories:
+              <div className="flex items-center mt-1 gap-2">
+                <span className="inline-block w-6 h-6 bg-green-500 rounded-md flex items-center justify-center text-white">
+                  <Check className="h-4 w-4" />
+                </span> Exact match
+                <span className="inline-block w-6 h-6 bg-yellow-500 rounded-md flex items-center justify-center text-white">≈</span> Related
+                <span className="inline-block w-6 h-6 bg-gray-500 rounded-md flex items-center justify-center text-white">✗</span> Not related
+              </div>
+            </span>
           </li>
-          <li>You have {maxAttempts} attempts to guess correctly</li>
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>Hover over category cells to see your guess and (after the game) the correct answer</span>
+          </li>
+          <li className="flex items-start">
+            <span className="mr-2">•</span>
+            <span>You have {maxAttempts} attempts to guess correctly</span>
+          </li>
         </ul>
       </div>
     </div>
   )
 }
-
