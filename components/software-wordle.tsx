@@ -27,18 +27,58 @@ export default function SoftwareWordle() {
   const [currentGuess, setCurrentGuess] = useState("")
   const [gameStatus, setGameStatus] = useState<"playing" | "won" | "lost">("playing")
   const [error, setError] = useState<string | null>(null)
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [suggestions, setSuggestions] = useState<string[]>([])
   const maxAttempts = 6
 
   const codeSnippetParts = useMemo(() => {
     if (!targetTerm) return [];
-    return targetTerm.codeSnippet.split("\n"); // Split by lines
+    return targetTerm.codeSnippet.split("\n");
   }, [targetTerm]);
 
   useEffect(() => {
-    // Select a random software term when the component mounts
     const randomIndex = Math.floor(Math.random() * softwareTerms.length)
     setTargetTerm(softwareTerms[randomIndex])
   }, [])
+
+  useEffect(() => {
+    if (currentGuess.trim() === "") {
+      setSuggestions([])
+      return
+    }
+    const filteredSuggestions = softwareTerms
+      .map(term => term.name)
+      .filter(name => name.toLowerCase().includes(currentGuess.toLowerCase()))
+    setSuggestions(filteredSuggestions)
+  }, [currentGuess])
+
+  useEffect(() => {
+    if (suggestions.length > 0) {
+      setSelectedIndex(0); 
+    } else {
+      setSelectedIndex(-1); 
+    }
+  }, [suggestions]);
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowDown" && showSuggestions) {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev < suggestions.length - 1 ? prev + 1 : prev));
+    } else if (e.key === "ArrowUp" && showSuggestions) {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev > 0 ? prev - 1 : 0));
+    } else if (e.key === "Enter") {
+      if (showSuggestions && selectedIndex >= 0) {
+        setCurrentGuess(suggestions[selectedIndex]);
+        setShowSuggestions(false);
+      } else {
+        handleGuess();
+      }
+    } else if (e.key === "Escape") {
+      setShowSuggestions(false);
+    }
+  };
 
   const handleGuess = () => {
     if (!targetTerm) return
@@ -47,9 +87,12 @@ export default function SoftwareWordle() {
       return
     }
 
-    // Find the guessed term in our database
-    const guessedTerm = softwareTerms.find((term) => term.name.toLowerCase() === currentGuess.toLowerCase())
+    if (guesses.some(guess => guess.term.toLowerCase() === currentGuess.toLowerCase())) {
+      setError("You've already guessed that term");
+      return;
+    }
 
+    const guessedTerm = softwareTerms.find((term) => term.name.toLowerCase() === currentGuess.toLowerCase())
     if (!guessedTerm) {
       setError("Term not found in our database")
       return
@@ -57,7 +100,6 @@ export default function SoftwareWordle() {
 
     setError(null)
 
-    // Calculate feedback
     const yearFeedback = calculateYearFeedback(guessedTerm.releaseYear, targetTerm.releaseYear)
     const feedback = {
       releaseYear: yearFeedback.status,
@@ -78,7 +120,6 @@ export default function SoftwareWordle() {
     setGuesses(updatedGuesses)
     setCurrentGuess("")
 
-    // Check if the player won
     if (guessedTerm.name.toLowerCase() === targetTerm.name.toLowerCase()) {
       setGameStatus("won")
     } else if (updatedGuesses.length >= maxAttempts) {
@@ -103,61 +144,34 @@ export default function SoftwareWordle() {
   }
 
   const calculateStringFeedback = (guessValue: string, targetValue: string): "correct" | "related" | "incorrect" => {
-    // Exact match
     if (guessValue.toLowerCase() === targetValue.toLowerCase()) return "correct"
-
-    // Normalize strings for comparison
     const normalizedGuess = guessValue.toLowerCase().trim()
     const normalizedTarget = targetValue.toLowerCase().trim()
-
-    // Check for direct substring relationship
-    if (normalizedGuess.includes(normalizedTarget) ||
-      normalizedTarget.includes(normalizedGuess)) {
+    if (normalizedGuess.includes(normalizedTarget) || normalizedTarget.includes(normalizedGuess)) {
       return "related"
     }
-
-    // Check for common words - improved to handle technical terms better
     const guessWords = normalizedGuess.split(/[\s-.,;:\/]+/).filter(word => word.length > 1)
     const targetWords = normalizedTarget.split(/[\s-.,;:\/]+/).filter(word => word.length > 1)
-
-    // Count matching words
     const matchingWords = guessWords.filter(word => targetWords.includes(word))
-    if (matchingWords.length > 0) {
-      return "related"
-    }
-
-    // Check for Levenshtein distance for similar terms
-    if (levenshteinDistance(normalizedGuess, normalizedTarget) <= 3) {
-      return "related"
-    }
-
+    if (matchingWords.length > 0) return "related"
+    if (levenshteinDistance(normalizedGuess, normalizedTarget) <= 3) return "related"
     return "incorrect"
   }
 
-  // Helper function for Levenshtein distance to find similar words
   function levenshteinDistance(str1: string, str2: string): number {
-    const track = Array(str2.length + 1).fill(null).map(() =>
-      Array(str1.length + 1).fill(null))
-
-    for (let i = 0; i <= str1.length; i += 1) {
-      track[0][i] = i
-    }
-
-    for (let j = 0; j <= str2.length; j += 1) {
-      track[j][0] = j
-    }
-
+    const track = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null))
+    for (let i = 0; i <= str1.length; i += 1) track[0][i] = i
+    for (let j = 0; j <= str2.length; j += 1) track[j][0] = j
     for (let j = 1; j <= str2.length; j += 1) {
       for (let i = 1; i <= str1.length; i += 1) {
         const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1
         track[j][i] = Math.min(
-          track[j][i - 1] + 1, // deletion
-          track[j - 1][i] + 1, // insertion
-          track[j - 1][i - 1] + indicator, // substitution
+          track[j][i - 1] + 1,
+          track[j - 1][i] + 1,
+          track[j - 1][i - 1] + indicator,
         )
       }
     }
-
     return track[str2.length][str1.length]
   }
 
@@ -172,27 +186,19 @@ export default function SoftwareWordle() {
 
   const getFeedbackColor = (feedback: "correct" | "related" | "incorrect") => {
     switch (feedback) {
-      case "correct":
-        return "bg-green-500"
-      case "related":
-        return "bg-yellow-500"
-      case "incorrect":
-        return "bg-gray-500"
+      case "correct": return "bg-green-500"
+      case "related": return "bg-yellow-500"
+      case "incorrect": return "bg-gray-500"
     }
   }
 
   const getCategoryDescription = (category: string): string => {
     switch (category) {
-      case "type":
-        return "The classification of the technology (Programming Language, Framework, Library, Tool, etc.)"
-      case "paradigm":
-        return "The programming approach or methodology associated with the technology"
-      case "domain":
-        return "The primary field or area where the technology is applied"
-      case "company":
-        return "The organization, foundation, or entity that created or maintains the technology"
-      default:
-        return ""
+      case "type": return "The classification of the technology (Programming Language, Framework, Library, Tool, etc.)"
+      case "paradigm": return "The programming approach or methodology associated with the technology"
+      case "domain": return "The primary field or area where the technology is applied"
+      case "company": return "The organization, foundation, or entity that created or maintains the technology"
+      default: return ""
     }
   }
 
@@ -201,18 +207,44 @@ export default function SoftwareWordle() {
       {gameStatus === "playing" && (
         <div className="mb-6">
           <div className="flex gap-2 mb-2">
-            <Input
-              type="text"
-              value={currentGuess}
-              onChange={(e) => setCurrentGuess(e.target.value)}
-              placeholder="Enter a software term"
-              className="flex-1"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleGuess()
-              }}
-              list="term-suggestions"
-            />
-            <Button onClick={handleGuess}>Guess</Button>
+            <div className="relative flex-1">
+              <Input
+                type="text"
+                value={currentGuess}
+                onChange={(e) => {
+                  setCurrentGuess(e.target.value);
+                  setShowSuggestions(true);
+                }}
+                onFocus={() => setShowSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
+                onKeyDown={handleKeyDown}
+                placeholder="Enter a language or framework"
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-zinc-500"
+              />
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto transition-all duration-200 ease-in-out">
+                  {suggestions.map((suggestion, index) => (
+                    <div
+                      key={index}
+                      className={`p-2 cursor-pointer hover:bg-zinc-50 ${index === selectedIndex ? "bg-zinc-100" : ""
+                        }`}
+                      onMouseDown={() => {
+                        setCurrentGuess(suggestion);
+                        setShowSuggestions(false);
+                      }}
+                    >
+                      {suggestion}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            <Button
+              onClick={handleGuess}
+              className="bg-zinc-700 text-white px-4 py-2 rounded-md"
+            >
+              Guess
+            </Button>
           </div>
           {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
         </div>
@@ -336,7 +368,6 @@ export default function SoftwareWordle() {
                 <tr key={index} className="border-t">
                   <td className="px-4 py-3">
                     <div className="font-medium">{guess.term}</div>
-                    {/* Removed the release year display here since it's in the year column */}
                   </td>
                   <td className="px-1 py-3">
                     <TooltipProvider>
