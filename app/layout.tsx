@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "lang_guessr",
+  title: "lang_guessr();",
   description: "Guess the software term based on its categories.",
 };
 
