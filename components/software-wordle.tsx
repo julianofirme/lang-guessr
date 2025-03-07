@@ -521,13 +521,13 @@ export default function SoftwareWordle() {
             <span className="mr-2">•</span>
             <span>For the <strong>Year</strong> column:
               <div className="flex items-center mt-1 gap-2">
-                <span className="inline-block w-6 h-6 bg-green-500 rounded-md flex items-center justify-center text-white">
+                <span className="w-6 h-6 bg-green-500 rounded-md flex items-center justify-center text-white">
                   <Check className="h-4 w-4" />
                 </span> Exact match
-                <span className="inline-block w-6 h-6 bg-yellow-500 rounded-md flex items-center justify-center text-white">
+                <span className="w-6 h-6 bg-yellow-500 rounded-md flex items-center justify-center text-white">
                   <ArrowUp className="h-4 w-4" />
                 </span> Target is newer
-                <span className="inline-block w-6 h-6 bg-yellow-500 rounded-md flex items-center justify-center text-white">
+                <span className="w-6 h-6 bg-yellow-500 rounded-md flex items-center justify-center text-white">
                   <ArrowDown className="h-4 w-4" />
                 </span> Target is older
               </div>
@@ -537,11 +537,11 @@ export default function SoftwareWordle() {
             <span className="mr-2">•</span>
             <span>For other categories:
               <div className="flex items-center mt-1 gap-2">
-                <span className="inline-block w-6 h-6 bg-green-500 rounded-md flex items-center justify-center text-white">
+                <span className="w-6 h-6 bg-green-500 rounded-md flex items-center justify-center text-white">
                   <Check className="h-4 w-4" />
                 </span> Exact match
-                <span className="inline-block w-6 h-6 bg-yellow-500 rounded-md flex items-center justify-center text-white">≈</span> Related
-                <span className="inline-block w-6 h-6 bg-gray-500 rounded-md flex items-center justify-center text-white">✗</span> Not related
+                <span className="w-6 h-6 bg-yellow-500 rounded-md flex items-center justify-center text-white">≈</span> Related
+                <span className="w-6 h-6 bg-gray-500 rounded-md flex items-center justify-center text-white">✗</span> Not related
               </div>
             </span>
           </li>
