@@ -1,203 +1,93 @@
-export const softwareTerms = [
+// Define more meaningful and intuitive categories for software terms
+export type SoftwareTerm = {
+  name: string
+  releaseYear: number
+  type: string       // Programming Language, Framework, Library, Tool, Database, etc.
+  paradigm: string   // OOP, Functional, Procedural, Declarative, etc. (or "N/A" for non-languages)
+  domain: string     // Web, Mobile, Data Science, DevOps, Gaming, etc.
+  company: string    // Organization behind it (or "Community" or "Individual")
+}
+
+// Sample data with improved categories
+export const softwareTerms: SoftwareTerm[] = [
+  {
+    name: "JavaScript",
+    releaseYear: 1995,
+    type: "Programming Language",
+    paradigm: "Multi-paradigm",
+    domain: "Web Development",
+    company: "Netscape/ECMA"
+  },
   {
     name: "React",
     releaseYear: 2013,
-    primaryPurpose: "Frontend Development",
-    category1: "JavaScript",
-    category2: "Framework",
-    category3: "Component-based",
+    type: "Library",
+    paradigm: "Component-based",
+    domain: "Web Development",
+    company: "Facebook"
   },
   {
     name: "Python",
     releaseYear: 1991,
-    primaryPurpose: "General-purpose Programming",
-    category1: "Programming Language",
-    category2: "Interpreted",
-    category3: "Object-oriented",
-  },
-  {
-    name: "Node.js",
-    releaseYear: 2009,
-    primaryPurpose: "Server-side JavaScript",
-    category1: "JavaScript Runtime",
-    category2: "Backend",
-    category3: "Event-driven",
-  },
-  {
-    name: "MongoDB",
-    releaseYear: 2009,
-    primaryPurpose: "Database",
-    category1: "NoSQL",
-    category2: "Document-oriented",
-    category3: "JSON-like storage",
-  },
-  {
-    name: "TypeScript",
-    releaseYear: 2012,
-    primaryPurpose: "JavaScript Superset",
-    category1: "Programming Language",
-    category2: "Statically typed",
-    category3: "Microsoft",
-  },
-  {
-    name: "Docker",
-    releaseYear: 2013,
-    primaryPurpose: "Containerization",
-    category1: "DevOps",
-    category2: "Deployment",
-    category3: "Virtualization",
-  },
-  {
-    name: "Angular",
-    releaseYear: 2010,
-    primaryPurpose: "Frontend Development",
-    category1: "JavaScript",
-    category2: "Framework",
-    category3: "Google",
-  },
-  {
-    name: "Vue.js",
-    releaseYear: 2014,
-    primaryPurpose: "Frontend Development",
-    category1: "JavaScript",
-    category2: "Framework",
-    category3: "Progressive",
-  },
-  {
-    name: "Kubernetes",
-    releaseYear: 2014,
-    primaryPurpose: "Container Orchestration",
-    category1: "DevOps",
-    category2: "Cloud Native",
-    category3: "Google",
+    type: "Programming Language",
+    paradigm: "Multi-paradigm",
+    domain: "General Purpose",
+    company: "Python Software Foundation"
   },
   {
     name: "TensorFlow",
     releaseYear: 2015,
-    primaryPurpose: "Machine Learning",
-    category1: "AI",
-    category2: "Data Science",
-    category3: "Google",
+    type: "Library",
+    paradigm: "Dataflow",
+    domain: "Machine Learning",
+    company: "Google"
   },
   {
-    name: "PostgreSQL",
-    releaseYear: 1996,
-    primaryPurpose: "Database",
-    category1: "SQL",
-    category2: "Relational",
-    category3: "Open Source",
+    name: "Docker",
+    releaseYear: 2013,
+    type: "Tool",
+    paradigm: "N/A",
+    domain: "DevOps",
+    company: "Docker, Inc."
+  },
+  {
+    name: "TypeScript",
+    releaseYear: 2012,
+    type: "Programming Language",
+    paradigm: "Static typing",
+    domain: "Web Development",
+    company: "Microsoft"
+  },
+  {
+    name: "MongoDB",
+    releaseYear: 2009,
+    type: "Database",
+    paradigm: "NoSQL",
+    domain: "Data Storage",
+    company: "MongoDB Inc."
+  },
+  {
+    name: "Angular",
+    releaseYear: 2016,
+    type: "Framework",
+    paradigm: "Component-based",
+    domain: "Web Development",
+    company: "Google"
+  },
+  {
+    name: "Kubernetes",
+    releaseYear: 2014,
+    type: "Platform",
+    paradigm: "N/A",
+    domain: "Container Orchestration",
+    company: "Google"
   },
   {
     name: "Swift",
     releaseYear: 2014,
-    primaryPurpose: "iOS Development",
-    category1: "Programming Language",
-    category2: "Apple",
-    category3: "Mobile",
-  },
-  {
-    name: "Rust",
-    releaseYear: 2010,
-    primaryPurpose: "Systems Programming",
-    category1: "Programming Language",
-    category2: "Memory Safety",
-    category3: "Mozilla",
-  },
-  {
-    name: "Next.js",
-    releaseYear: 2016,
-    primaryPurpose: "React Framework",
-    category1: "JavaScript",
-    category2: "Server-side Rendering",
-    category3: "Vercel",
-  },
-  {
-    name: "GraphQL",
-    releaseYear: 2015,
-    primaryPurpose: "API Query Language",
-    category1: "Web Development",
-    category2: "Facebook",
-    category3: "Data Fetching",
-  },
-  {
-    name: "Redis",
-    releaseYear: 2009,
-    primaryPurpose: "In-memory Database",
-    category1: "NoSQL",
-    category2: "Key-value Store",
-    category3: "Caching",
-  },
-  {
-    name: "Git",
-    releaseYear: 2005,
-    primaryPurpose: "Version Control",
-    category1: "Development Tool",
-    category2: "Distributed",
-    category3: "Linus Torvalds",
-  },
-  {
-    name: "Kotlin",
-    releaseYear: 2011,
-    primaryPurpose: "Android Development",
-    category1: "Programming Language",
-    category2: "JVM",
-    category3: "JetBrains",
-  },
-  {
-    name: "Django",
-    releaseYear: 2005,
-    primaryPurpose: "Web Framework",
-    category1: "Python",
-    category2: "Backend",
-    category3: "Batteries-included",
-  },
-  {
-    name: "Svelte",
-    releaseYear: 2016,
-    primaryPurpose: "Frontend Development",
-    category1: "JavaScript",
-    category2: "Compiler",
-    category3: "No Virtual DOM",
-  },
-  {
-    name: "Unity",
-    releaseYear: 2005,
-    primaryPurpose: "Game Development",
-    category1: "Game Engine",
-    category2: "C#",
-    category3: "Cross-platform",
-  },
-  {
-    name: "AWS",
-    releaseYear: 2006,
-    primaryPurpose: "Cloud Services",
-    category1: "Infrastructure",
-    category2: "Amazon",
-    category3: "Distributed Computing",
-  },
-  {
-    name: "Flutter",
-    releaseYear: 2017,
-    primaryPurpose: "Mobile Development",
-    category1: "UI Framework",
-    category2: "Dart",
-    category3: "Google",
-  },
-  {
-    name: "Elasticsearch",
-    releaseYear: 2010,
-    primaryPurpose: "Search Engine",
-    category1: "Data Storage",
-    category2: "Analytics",
-    category3: "Lucene-based",
-  },
-  {
-    name: "Ruby on Rails",
-    releaseYear: 2004,
-    primaryPurpose: "Web Framework",
-    category1: "Ruby",
-    category2: "Backend",
-    category3: "Convention over Configuration",
-  },
+    type: "Programming Language",
+    paradigm: "Multi-paradigm",
+    domain: "Mobile Development",
+    company: "Apple"
+  }
 ]
-

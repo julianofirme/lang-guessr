@@ -7,16 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { AlertCircle, CheckCircle2, HelpCircle, ArrowUp, ArrowDown, Check } from "lucide-react"
-import { softwareTerms } from "@/data/software-terms"
-
-type SoftwareTerm = {
-  name: string
-  releaseYear: number
-  primaryPurpose: string
-  category1: string
-  category2: string
-  category3: string
-}
+import { SoftwareTerm, softwareTerms } from "@/data/software-terms"
 
 type Guess = {
   term: string
@@ -24,10 +15,10 @@ type Guess = {
   feedback: {
     releaseYear: "correct" | "related" | "incorrect"
     yearDirection?: "higher" | "lower"
-    primaryPurpose: "correct" | "related" | "incorrect"
-    category1: "correct" | "related" | "incorrect"
-    category2: "correct" | "related" | "incorrect"
-    category3: "correct" | "related" | "incorrect"
+    type: "correct" | "related" | "incorrect"
+    paradigm: "correct" | "related" | "incorrect"
+    domain: "correct" | "related" | "incorrect"
+    company: "correct" | "related" | "incorrect"
   }
 }
 
@@ -68,10 +59,10 @@ export default function SoftwareWordle() {
     const feedback = {
       releaseYear: yearFeedback.status,
       yearDirection: yearFeedback.direction,
-      primaryPurpose: calculateStringFeedback(guessedTerm.primaryPurpose, targetTerm.primaryPurpose),
-      category1: calculateStringFeedback(guessedTerm.category1, targetTerm.category1),
-      category2: calculateStringFeedback(guessedTerm.category2, targetTerm.category2),
-      category3: calculateStringFeedback(guessedTerm.category3, targetTerm.category3),
+      type: calculateStringFeedback(guessedTerm.type, targetTerm.type),
+      paradigm: calculateStringFeedback(guessedTerm.paradigm, targetTerm.paradigm),
+      domain: calculateStringFeedback(guessedTerm.domain, targetTerm.domain),
+      company: calculateStringFeedback(guessedTerm.company, targetTerm.company),
     }
 
     const newGuess: Guess = {
@@ -121,8 +112,8 @@ export default function SoftwareWordle() {
     }
     
     // Check for common words - improved to handle technical terms better
-    const guessWords = normalizedGuess.split(/[\s-.,;:]+/).filter(word => word.length > 1)
-    const targetWords = normalizedTarget.split(/[\s-.,;:]+/).filter(word => word.length > 1)
+    const guessWords = normalizedGuess.split(/[\s-.,;:\/]+/).filter(word => word.length > 1)
+    const targetWords = normalizedTarget.split(/[\s-.,;:\/]+/).filter(word => word.length > 1)
     
     // Count matching words
     const matchingWords = guessWords.filter(word => targetWords.includes(word))
@@ -192,6 +183,21 @@ export default function SoftwareWordle() {
 
   const toggleHints = () => {
     setShowHints(!showHints)
+  }
+
+  const getCategoryDescription = (category: string): string => {
+    switch (category) {
+      case "type":
+        return "The classification of the technology (Programming Language, Framework, Library, Tool, etc.)"
+      case "paradigm":
+        return "The programming approach or methodology associated with the technology"
+      case "domain":
+        return "The primary field or area where the technology is applied"
+      case "company":
+        return "The organization, foundation, or entity that created or maintains the technology"
+      default:
+        return ""
+    }
   }
 
   return (
@@ -277,14 +283,14 @@ export default function SoftwareWordle() {
             <div className="grid grid-cols-2 gap-2">
               <div className="font-semibold">Release Year:</div>
               <div>{targetTerm.releaseYear}</div>
-              <div className="font-semibold">Primary Purpose:</div>
-              <div>{targetTerm.primaryPurpose}</div>
-              <div className="font-semibold">Category 1:</div>
-              <div>{targetTerm.category1}</div>
-              <div className="font-semibold">Category 2:</div>
-              <div>{targetTerm.category2}</div>
-              <div className="font-semibold">Category 3:</div>
-              <div>{targetTerm.category3}</div>
+              <div className="font-semibold">Type:</div>
+              <div>{targetTerm.type}</div>
+              <div className="font-semibold">Paradigm:</div>
+              <div>{targetTerm.paradigm}</div>
+              <div className="font-semibold">Domain:</div>
+              <div>{targetTerm.domain}</div>
+              <div className="font-semibold">Company:</div>
+              <div>{targetTerm.company}</div>
             </div>
           </div>
         )}
@@ -294,11 +300,56 @@ export default function SoftwareWordle() {
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-4 py-2 text-left">Term</th>
-                <th className="px-3 py-2 text-center">Year</th>
-                <th className="px-3 py-2 text-center">Purpose</th>
-                <th className="px-3 py-2 text-center">Cat 1</th>
-                <th className="px-3 py-2 text-center">Cat 2</th>
-                <th className="px-3 py-2 text-center">Cat 3</th>
+                <th className="px-3 py-2 text-center">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="cursor-help">Year</TooltipTrigger>
+                      <TooltipContent>
+                        <p>The year when the technology was first released</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </th>
+                <th className="px-3 py-2 text-center">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="cursor-help">Type</TooltipTrigger>
+                      <TooltipContent>
+                        <p>{getCategoryDescription("type")}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </th>
+                <th className="px-3 py-2 text-center">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="cursor-help">Paradigm</TooltipTrigger>
+                      <TooltipContent>
+                        <p>{getCategoryDescription("paradigm")}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </th>
+                <th className="px-3 py-2 text-center">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="cursor-help">Domain</TooltipTrigger>
+                      <TooltipContent>
+                        <p>{getCategoryDescription("domain")}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </th>
+                <th className="px-3 py-2 text-center">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger className="cursor-help">Company</TooltipTrigger>
+                      <TooltipContent>
+                        <p>{getCategoryDescription("company")}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -325,10 +376,10 @@ export default function SoftwareWordle() {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className={`${getFeedbackColor(guess.feedback.primaryPurpose)} text-white rounded-md p-2 text-center cursor-help`}>
-                            {guess.feedback.primaryPurpose === "correct" ? (
+                          <div className={`${getFeedbackColor(guess.feedback.type)} text-white rounded-md p-2 text-center cursor-help`}>
+                            {guess.feedback.type === "correct" ? (
                               <Check className="h-4 w-4 mx-auto" />
-                            ) : guess.feedback.primaryPurpose === "related" ? (
+                            ) : guess.feedback.type === "related" ? (
                               "≈"
                             ) : (
                               "✗"
@@ -337,11 +388,11 @@ export default function SoftwareWordle() {
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="font-medium">Your guess:</p>
-                          <p>{guess.termData.primaryPurpose}</p>
-                          {guess.feedback.primaryPurpose !== "correct" && gameStatus !== "playing" && (
+                          <p>{guess.termData.type}</p>
+                          {guess.feedback.type !== "correct" && gameStatus !== "playing" && (
                             <>
                               <p className="font-medium mt-1">Correct answer:</p>
-                              <p>{targetTerm?.primaryPurpose}</p>
+                              <p>{targetTerm?.type}</p>
                             </>
                           )}
                         </TooltipContent>
@@ -352,10 +403,10 @@ export default function SoftwareWordle() {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className={`${getFeedbackColor(guess.feedback.category1)} text-white rounded-md p-2 text-center cursor-help`}>
-                            {guess.feedback.category1 === "correct" ? (
+                          <div className={`${getFeedbackColor(guess.feedback.paradigm)} text-white rounded-md p-2 text-center cursor-help`}>
+                            {guess.feedback.paradigm === "correct" ? (
                               <Check className="h-4 w-4 mx-auto" />
-                            ) : guess.feedback.category1 === "related" ? (
+                            ) : guess.feedback.paradigm === "related" ? (
                               "≈"
                             ) : (
                               "✗"
@@ -364,11 +415,11 @@ export default function SoftwareWordle() {
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="font-medium">Your guess:</p>
-                          <p>{guess.termData.category1}</p>
-                          {guess.feedback.category1 !== "correct" && gameStatus !== "playing" && (
+                          <p>{guess.termData.paradigm}</p>
+                          {guess.feedback.paradigm !== "correct" && gameStatus !== "playing" && (
                             <>
                               <p className="font-medium mt-1">Correct answer:</p>
-                              <p>{targetTerm?.category1}</p>
+                              <p>{targetTerm?.paradigm}</p>
                             </>
                           )}
                         </TooltipContent>
@@ -379,10 +430,10 @@ export default function SoftwareWordle() {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className={`${getFeedbackColor(guess.feedback.category2)} text-white rounded-md p-2 text-center cursor-help`}>
-                            {guess.feedback.category2 === "correct" ? (
+                          <div className={`${getFeedbackColor(guess.feedback.domain)} text-white rounded-md p-2 text-center cursor-help`}>
+                            {guess.feedback.domain === "correct" ? (
                               <Check className="h-4 w-4 mx-auto" />
-                            ) : guess.feedback.category2 === "related" ? (
+                            ) : guess.feedback.domain === "related" ? (
                               "≈"
                             ) : (
                               "✗"
@@ -391,11 +442,11 @@ export default function SoftwareWordle() {
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="font-medium">Your guess:</p>
-                          <p>{guess.termData.category2}</p>
-                          {guess.feedback.category2 !== "correct" && gameStatus !== "playing" && (
+                          <p>{guess.termData.domain}</p>
+                          {guess.feedback.domain !== "correct" && gameStatus !== "playing" && (
                             <>
                               <p className="font-medium mt-1">Correct answer:</p>
-                              <p>{targetTerm?.category2}</p>
+                              <p>{targetTerm?.domain}</p>
                             </>
                           )}
                         </TooltipContent>
@@ -406,10 +457,10 @@ export default function SoftwareWordle() {
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className={`${getFeedbackColor(guess.feedback.category3)} text-white rounded-md p-2 text-center cursor-help`}>
-                            {guess.feedback.category3 === "correct" ? (
+                          <div className={`${getFeedbackColor(guess.feedback.company)} text-white rounded-md p-2 text-center cursor-help`}>
+                            {guess.feedback.company === "correct" ? (
                               <Check className="h-4 w-4 mx-auto" />
-                            ) : guess.feedback.category3 === "related" ? (
+                            ) : guess.feedback.company === "related" ? (
                               "≈"
                             ) : (
                               "✗"
@@ -418,11 +469,11 @@ export default function SoftwareWordle() {
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="font-medium">Your guess:</p>
-                          <p>{guess.termData.category3}</p>
-                          {guess.feedback.category3 !== "correct" && gameStatus !== "playing" && (
+                          <p>{guess.termData.company}</p>
+                          {guess.feedback.company !== "correct" && gameStatus !== "playing" && (
                             <>
                               <p className="font-medium mt-1">Correct answer:</p>
-                              <p>{targetTerm?.category3}</p>
+                              <p>{targetTerm?.company}</p>
                             </>
                           )}
                         </TooltipContent>
@@ -444,8 +495,24 @@ export default function SoftwareWordle() {
       </div>
 
       <div className="mt-6 p-4 bg-gray-50 rounded-lg border">
-        <h3 className="font-bold mb-2">How to Play:</h3>
-        <ul className="space-y-2 pl-5">
+        <h3 className="font-bold mb-3">Categories Explained:</h3>
+        <div className="space-y-3">
+          <div>
+            <span className="font-semibold">Type:</span> Classification of the technology (Programming Language, Framework, Library, etc.)
+          </div>
+          <div>
+            <span className="font-semibold">Paradigm:</span> Programming approach or methodology (OOP, Functional, Multi-paradigm, etc.)
+          </div>
+          <div>
+            <span className="font-semibold">Domain:</span> Primary field of application (Web, Mobile, Data Science, DevOps, etc.)
+          </div>
+          <div>
+            <span className="font-semibold">Company:</span> Organization or entity behind the technology
+          </div>
+        </div>
+        
+        <h3 className="font-bold mt-4 mb-2">How to Play:</h3>
+        <ul className="space-y-2">
           <li className="flex items-start">
             <span className="mr-2">•</span>
             <span>Guess a software term (programming language, framework, library, tool)</span>
