@@ -8,18 +8,24 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { AlertCircle, CheckCircle2, ArrowUp, ArrowDown } from "lucide-react"
 import { SoftwareTerm, softwareTerms } from "@/data/software-terms"
 
+type FeedbackValue = "correct" | "related" | "incorrect";
+
+type Feedback = {
+  releaseYear: FeedbackValue;
+  yearDirection?: "higher" | "lower";
+  type: FeedbackValue;
+  paradigm: FeedbackValue;
+  domain: FeedbackValue;
+  company: FeedbackValue;
+};
+
+type FeedbackKey = keyof Omit<Feedback, "yearDirection">;
+
 type Guess = {
-  term: string
-  termData: SoftwareTerm
-  feedback: {
-    releaseYear: "correct" | "related" | "incorrect"
-    yearDirection?: "higher" | "lower"
-    type: "correct" | "related" | "incorrect"
-    paradigm: "correct" | "related" | "incorrect"
-    domain: "correct" | "related" | "incorrect"
-    company: "correct" | "related" | "incorrect"
-  }
-}
+  term: string;
+  termData: SoftwareTerm;
+  feedback: Feedback;
+};
 
 export default function SoftwareWordle() {
   const [targetTerm, setTargetTerm] = useState<SoftwareTerm | null>(null)
@@ -55,9 +61,9 @@ export default function SoftwareWordle() {
 
   useEffect(() => {
     if (suggestions.length > 0) {
-      setSelectedIndex(0); 
+      setSelectedIndex(0);
     } else {
-      setSelectedIndex(-1); 
+      setSelectedIndex(-1);
     }
   }, [suggestions]);
 
@@ -129,7 +135,7 @@ export default function SoftwareWordle() {
 
   const revealedCodeParts = guesses.length > 0 ? codeSnippetParts.slice(0, Math.min(guesses.length, 5)) : [];
 
-  const calculateYearFeedback = (guessYear: number, targetYear: number): { status: "correct" | "related" | "incorrect", direction?: "higher" | "lower" } => {
+  const calculateYearFeedback = (guessYear: number, targetYear: number): { status: FeedbackValue, direction?: "higher" | "lower" } => {
     if (guessYear === targetYear) return { status: "correct" }
     if (Math.abs(guessYear - targetYear) <= 3) {
       return {
@@ -143,7 +149,7 @@ export default function SoftwareWordle() {
     }
   }
 
-  const calculateStringFeedback = (guessValue: string, targetValue: string): "correct" | "related" | "incorrect" => {
+  const calculateStringFeedback = (guessValue: string, targetValue: string): FeedbackValue => {
     if (guessValue.toLowerCase() === targetValue.toLowerCase()) return "correct"
     const normalizedGuess = guessValue.toLowerCase().trim()
     const normalizedTarget = targetValue.toLowerCase().trim()
@@ -184,7 +190,7 @@ export default function SoftwareWordle() {
     setError(null)
   }
 
-  const getFeedbackColor = (feedback: "correct" | "related" | "incorrect") => {
+  const getFeedbackColor = (feedback: FeedbackValue) => {
     switch (feedback) {
       case "correct": return "bg-green-500"
       case "related": return "bg-yellow-500"
@@ -392,24 +398,31 @@ export default function SoftwareWordle() {
                       </Tooltip>
                     </TooltipProvider>
                   </td>
-                  {["type", "paradigm", "domain", "company"].map((category) => (
-                    <td key={category} className="px-2 py-3">
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className={`${getFeedbackColor(guess.feedback[category])} text-white rounded-md p-2 text-center`}>
-                              {guess.termData[category]}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            {gameStatus !== "playing" && guess.feedback[category] !== "correct" && (
-                              <p>Correct answer: {targetTerm?.[category]}</p>
-                            )}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </td>
-                  ))}
+                  {["type", "paradigm", "domain", "company"].map((category) => {
+                    const categoryKey = category as FeedbackKey;
+                    return (
+                      <td key={category} className="px-2 py-3">
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div
+                                className={`${getFeedbackColor(
+                                  guess.feedback[categoryKey]
+                                )} text-white rounded-md p-2 text-center`}
+                              >
+                                {guess.termData[categoryKey as keyof SoftwareTerm]}
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              {gameStatus !== "playing" && guess.feedback[categoryKey] !== "correct" && (
+                                <p>Correct answer: {targetTerm && targetTerm[categoryKey as keyof SoftwareTerm]}</p>
+                              )}
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </td>
+                    );
+                  })}
                 </tr>
               ))}
               {guesses.length === 0 && (
