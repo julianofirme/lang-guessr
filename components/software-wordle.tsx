@@ -33,9 +33,10 @@ export default function SoftwareWordle() {
   const [currentGuess, setCurrentGuess] = useState("")
   const [gameStatus, setGameStatus] = useState<"playing" | "won" | "lost">("playing")
   const [error, setError] = useState<string | null>(null)
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [selectedIndex, setSelectedIndex] = useState(-1)
   const [suggestions, setSuggestions] = useState<string[]>([])
+  const [dateString, setDateString] = useState("")
   const maxAttempts = 6
 
   const codeSnippetParts = useMemo(() => {
@@ -43,21 +44,60 @@ export default function SoftwareWordle() {
     return targetTerm.codeSnippet.split("\n");
   }, [targetTerm]);
 
-  useEffect(() => {
-    const randomIndex = Math.floor(Math.random() * softwareTerms.length)
-    setTargetTerm(softwareTerms[randomIndex])
-  }, [])
+  // Function to get the current UTC date string
+  const getCurrentDateString = () => {
+    const currentDate = new Date();
+    const utcYear = currentDate.getUTCFullYear();
+    const utcMonth = String(currentDate.getUTCMonth() + 1).padStart(2, '0');
+    const utcDay = String(currentDate.getUTCDate()).padStart(2, '0');
+    return `${utcYear}-${utcMonth}-${utcDay}`;
+  }
 
+  // Load daily term and game state on mount
+  useEffect(() => {
+    const currentDateString = getCurrentDateString();
+    setDateString(currentDateString);
+
+    // Calculate term index based on days since start date
+    const startDate = new Date('2024-10-01T00:00:00Z').getTime();
+    const currentDate = new Date(currentDateString + 'T00:00:00Z').getTime();
+    const diffTime = currentDate - startDate;
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const termIndex = (diffDays % softwareTerms.length + softwareTerms.length) % softwareTerms.length;
+    setTargetTerm(softwareTerms[termIndex]);
+
+    // Load game state from local storage
+    const storageKey = `lang-guessr-${currentDateString}`;
+    const savedState = localStorage.getItem(storageKey);
+    if (savedState) {
+      const { guesses, gameStatus } = JSON.parse(savedState);
+      setGuesses(guesses);
+      setGameStatus(gameStatus);
+    } else {
+      setGuesses([]);
+      setGameStatus("playing");
+    }
+  }, []);
+
+  // Save game state to local storage when guesses or gameStatus changes
+  useEffect(() => {
+    if (dateString) {
+      const storageKey = `lang-guessr-${dateString}`;
+      localStorage.setItem(storageKey, JSON.stringify({ guesses, gameStatus }));
+    }
+  }, [guesses, gameStatus, dateString]);
+
+  // Suggestion logic remains unchanged
   useEffect(() => {
     if (currentGuess.trim() === "") {
-      setSuggestions([])
-      return
+      setSuggestions([]);
+      return;
     }
     const filteredSuggestions = softwareTerms
       .map(term => term.name)
-      .filter(name => name.toLowerCase().includes(currentGuess.toLowerCase()))
-    setSuggestions(filteredSuggestions)
-  }, [currentGuess])
+      .filter(name => name.toLowerCase().includes(currentGuess.toLowerCase()));
+    setSuggestions(filteredSuggestions);
+  }, [currentGuess]);
 
   useEffect(() => {
     if (suggestions.length > 0) {
@@ -87,10 +127,10 @@ export default function SoftwareWordle() {
   };
 
   const handleGuess = () => {
-    if (!targetTerm) return
+    if (!targetTerm) return;
     if (currentGuess.trim() === "") {
-      setError("Please enter a guess")
-      return
+      setError("Please enter a guess");
+      return;
     }
 
     if (guesses.some(guess => guess.term.toLowerCase() === currentGuess.toLowerCase())) {
@@ -98,15 +138,15 @@ export default function SoftwareWordle() {
       return;
     }
 
-    const guessedTerm = softwareTerms.find((term) => term.name.toLowerCase() === currentGuess.toLowerCase())
+    const guessedTerm = softwareTerms.find((term) => term.name.toLowerCase() === currentGuess.toLowerCase());
     if (!guessedTerm) {
-      setError("Term not found in our database")
-      return
+      setError("Term not found in our database");
+      return;
     }
 
-    setError(null)
+    setError(null);
 
-    const yearFeedback = calculateYearFeedback(guessedTerm.releaseYear, targetTerm.releaseYear)
+    const yearFeedback = calculateYearFeedback(guessedTerm.releaseYear, targetTerm.releaseYear);
     const feedback = {
       releaseYear: yearFeedback.status,
       yearDirection: yearFeedback.direction,
@@ -114,99 +154,90 @@ export default function SoftwareWordle() {
       paradigm: calculateStringFeedback(guessedTerm.paradigm, targetTerm.paradigm),
       domain: calculateStringFeedback(guessedTerm.domain, targetTerm.domain),
       company: calculateStringFeedback(guessedTerm.company, targetTerm.company),
-    }
+    };
 
     const newGuess: Guess = {
       term: guessedTerm.name,
       termData: guessedTerm,
       feedback,
-    }
+    };
 
-    const updatedGuesses = [...guesses, newGuess]
-    setGuesses(updatedGuesses)
-    setCurrentGuess("")
+    const updatedGuesses = [...guesses, newGuess];
+    setGuesses(updatedGuesses);
+    setCurrentGuess("");
 
     if (guessedTerm.name.toLowerCase() === targetTerm.name.toLowerCase()) {
-      setGameStatus("won")
+      setGameStatus("won");
     } else if (updatedGuesses.length >= maxAttempts) {
-      setGameStatus("lost")
+      setGameStatus("lost");
     }
-  }
+  };
 
   const revealedCodeParts = guesses.length > 0 ? codeSnippetParts.slice(0, Math.min(guesses.length, 5)) : [];
 
   const calculateYearFeedback = (guessYear: number, targetYear: number): { status: FeedbackValue, direction?: "higher" | "lower" } => {
-    if (guessYear === targetYear) return { status: "correct" }
+    if (guessYear === targetYear) return { status: "correct" };
     if (Math.abs(guessYear - targetYear) <= 3) {
       return {
         status: "related",
         direction: guessYear > targetYear ? "higher" : "lower"
-      }
+      };
     }
     return {
       status: "incorrect",
       direction: guessYear > targetYear ? "higher" : "lower"
-    }
-  }
+    };
+  };
 
   const calculateStringFeedback = (guessValue: string, targetValue: string): FeedbackValue => {
-    if (guessValue.toLowerCase() === targetValue.toLowerCase()) return "correct"
-    const normalizedGuess = guessValue.toLowerCase().trim()
-    const normalizedTarget = targetValue.toLowerCase().trim()
+    if (guessValue.toLowerCase() === targetValue.toLowerCase()) return "correct";
+    const normalizedGuess = guessValue.toLowerCase().trim();
+    const normalizedTarget = targetValue.toLowerCase().trim();
     if (normalizedGuess.includes(normalizedTarget) || normalizedTarget.includes(normalizedGuess)) {
-      return "related"
+      return "related";
     }
-    const guessWords = normalizedGuess.split(/[\s-.,;:\/]+/).filter(word => word.length > 1)
-    const targetWords = normalizedTarget.split(/[\s-.,;:\/]+/).filter(word => word.length > 1)
-    const matchingWords = guessWords.filter(word => targetWords.includes(word))
-    if (matchingWords.length > 0) return "related"
-    if (levenshteinDistance(normalizedGuess, normalizedTarget) <= 3) return "related"
-    return "incorrect"
-  }
+    const guessWords = normalizedGuess.split(/[\s-.,;:\/]+/).filter(word => word.length > 1);
+    const targetWords = normalizedTarget.split(/[\s-.,;:\/]+/).filter(word => word.length > 1);
+    const matchingWords = guessWords.filter(word => targetWords.includes(word));
+    if (matchingWords.length > 0) return "related";
+    if (levenshteinDistance(normalizedGuess, normalizedTarget) <= 3) return "related";
+    return "incorrect";
+  };
 
   function levenshteinDistance(str1: string, str2: string): number {
-    const track = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null))
-    for (let i = 0; i <= str1.length; i += 1) track[0][i] = i
-    for (let j = 0; j <= str2.length; j += 1) track[j][0] = j
+    const track = Array(str2.length + 1).fill(null).map(() => Array(str1.length + 1).fill(null));
+    for (let i = 0; i <= str1.length; i += 1) track[0][i] = i;
+    for (let j = 0; j <= str2.length; j += 1) track[j][0] = j;
     for (let j = 1; j <= str2.length; j += 1) {
       for (let i = 1; i <= str1.length; i += 1) {
-        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1
+        const indicator = str1[i - 1] === str2[j - 1] ? 0 : 1;
         track[j][i] = Math.min(
           track[j][i - 1] + 1,
           track[j - 1][i] + 1,
           track[j - 1][i - 1] + indicator,
-        )
+        );
       }
     }
-    return track[str2.length][str1.length]
-  }
-
-  const resetGame = () => {
-    const randomIndex = Math.floor(Math.random() * softwareTerms.length)
-    setTargetTerm(softwareTerms[randomIndex])
-    setGuesses([])
-    setCurrentGuess("")
-    setGameStatus("playing")
-    setError(null)
+    return track[str2.length][str1.length];
   }
 
   const getFeedbackColor = (feedback: FeedbackValue) => {
     switch (feedback) {
-      case "correct": return "bg-green-500"
-      case "related": return "bg-yellow-500"
-      case "incorrect": return "bg-gray-500"
+      case "correct": return "bg-green-500";
+      case "related": return "bg-yellow-500";
+      case "incorrect": return "bg-gray-500";
     }
-  }
+  };
 
   const getCategoryDescription = (category: string): string => {
     switch (category) {
-      case "type": return "The classification of the technology (Programming Language, Framework, Library, Tool, etc.)"
-      case "paradigm": return "The programming approach or methodology associated with the technology"
-      case "domain": return "The primary field or area where the technology is applied"
-      case "company": return "The organization, foundation, or entity that created or maintains the technology"
-      default: return ""
+      case "type": return "The classification of the technology (Programming Language, Framework, Library, Tool, etc.)";
+      case "paradigm": return "The programming approach or methodology associated with the technology";
+      case "domain": return "The primary field or area where the technology is applied";
+      case "company": return "The organization, foundation, or entity that created or maintains the technology";
+      default: return "";
     }
-  }
+  };
 
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
@@ -232,8 +263,7 @@ export default function SoftwareWordle() {
                   {suggestions.map((suggestion, index) => (
                     <div
                       key={index}
-                      className={`p-2 cursor-pointer hover:bg-zinc-50 ${index === selectedIndex ? "bg-zinc-100" : ""
-                        }`}
+                      className={`p-2 cursor-pointer hover:bg-zinc-50 ${index === selectedIndex ? "bg-zinc-100" : ""}`}
                       onMouseDown={() => {
                         setCurrentGuess(suggestion);
                         setShowSuggestions(false);
@@ -261,11 +291,9 @@ export default function SoftwareWordle() {
           <CheckCircle2 className="h-4 w-4 text-green-600" />
           <AlertTitle className="text-green-800">Congratulations!</AlertTitle>
           <AlertDescription className="text-green-700">
-            You guessed the correct term: <strong>{targetTerm?.name}</strong>
+            You guessed the correct term: <strong>{targetTerm?.name}</strong> in {guesses.length} attempts.<br />
+            Come back tomorrow for a new challenge.
           </AlertDescription>
-          <Button onClick={resetGame} className="mt-2 bg-green-600 hover:bg-green-700">
-            Play Again
-          </Button>
         </Alert>
       )}
 
@@ -274,11 +302,9 @@ export default function SoftwareWordle() {
           <AlertCircle className="h-4 w-4 text-red-600" />
           <AlertTitle className="text-red-800">Game Over</AlertTitle>
           <AlertDescription className="text-red-700">
-            The correct term was: <strong>{targetTerm?.name}</strong>
+            You didn’t guess correctly after {maxAttempts} attempts. The correct term was: <strong>{targetTerm?.name}</strong><br />
+            Come back tomorrow for a new challenge.
           </AlertDescription>
-          <Button onClick={resetGame} className="mt-2 bg-red-600 hover:bg-red-700">
-            Play Again
-          </Button>
         </Alert>
       )}
 
@@ -458,7 +484,7 @@ export default function SoftwareWordle() {
         <ul className="space-y-2">
           <li className="flex items-start">
             <span className="mr-2">•</span>
-            <span>Guess a software term (programming language, framework, library, tool)</span>
+            <span>Guess the daily software term (programming language, framework, library, tool)</span>
           </li>
           <li className="flex items-start">
             <span className="mr-2">•</span>
@@ -483,7 +509,7 @@ export default function SoftwareWordle() {
           </li>
           <li className="flex items-start">
             <span className="mr-2">•</span>
-            <span>You have {maxAttempts} attempts to guess correctly</span>
+            <span>You have {maxAttempts} attempts to guess correctly once per day</span>
           </li>
         </ul>
       </div>
