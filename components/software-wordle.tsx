@@ -35,6 +35,7 @@ export default function SoftwareWordle() {
   const [gameStatus, setGameStatus] = useState<"playing" | "won" | "lost">("playing")
   const [error, setError] = useState<string | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [showHistoricalHint, setShowHistoricalHint] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
   const [suggestions, setSuggestions] = useState<string[]>([])
   const [dateString, setDateString] = useState("")
@@ -311,9 +312,15 @@ export default function SoftwareWordle() {
             </div>
             <Button
               onClick={handleGuess}
-              className="bg-zinc-700 text-white px-4 py-2 rounded-md"
+              className="bg-zinc-900 text-white px-4 py-2 rounded-md"
             >
               Guess
+            </Button>
+            <Button
+              onClick={() => setShowHistoricalHint(true)}
+              className="bg-zinc-700 text-white px-4 py-2 rounded-md"
+            >
+              Show historical hint
             </Button>
           </div>
           {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
@@ -379,6 +386,15 @@ export default function SoftwareWordle() {
                 <div key={index}>{part}</div>
               ))}
             </pre>
+          </div>
+        )}
+
+        {gameStatus === "playing" && showHistoricalHint && (
+          <div className="mb-6 p-4 bg-gray-100 rounded-lg border">
+            <h3 className="font-bold mb-2">Historical Hint:</h3>
+            <div className="text-sm font-mono">
+              {targetTerm?.historicalHint}
+            </div>
           </div>
         )}
 
