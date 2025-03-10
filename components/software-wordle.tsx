@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { AlertCircle, CheckCircle2, ArrowUp, ArrowDown } from "lucide-react"
+import { AlertCircle, CheckCircle2, ArrowUp, ArrowDown, Share } from "lucide-react"
 import { SoftwareTerm, softwareTerms } from "@/data/software-terms"
+import toast from "react-hot-toast"
 
 type FeedbackValue = "correct" | "related" | "incorrect";
 
@@ -239,6 +240,39 @@ export default function SoftwareWordle() {
     }
   };
 
+  const generateShareText = () => {
+    const date = new Date().toISOString().split('T')[0]; // Formato YYYY-MM-DD
+    const guessesText = guesses.length + '/' + maxAttempts;
+
+    const grid = guesses.map(guess => {
+      const yearFeedback = guess.feedback.releaseYear === 'correct'
+        ? '🟩'
+        : guess.feedback.releaseYear === 'related'
+          ? '🟨' + (guess.feedback.yearDirection === 'higher' ? '⬆️' : '⬇️')
+          : '⬜' + (guess.feedback.yearDirection === 'higher' ? '⬆️' : '⬇️');
+
+      const typeFeedback = guess.feedback.type === 'correct' ? '🟩' : guess.feedback.type === 'related' ? '🟨' : '⬜';
+      const paradigmFeedback = guess.feedback.paradigm === 'correct' ? '🟩' : guess.feedback.paradigm === 'related' ? '🟨' : '⬜';
+      const domainFeedback = guess.feedback.domain === 'correct' ? '🟩' : guess.feedback.domain === 'related' ? '🟨' : '⬜';
+      const companyFeedback = guess.feedback.company === 'correct' ? '🟩' : guess.feedback.company === 'related' ? '🟨' : '⬜';
+
+      return `${yearFeedback} ${typeFeedback} ${paradigmFeedback} ${domainFeedback} ${companyFeedback}`;
+    }).join('\n');
+
+    return `Lang Guessr - ${date}\nGuesses: ${guessesText}\n\n${grid}`;
+  };
+
+  const handleShare = () => {
+    const shareText = generateShareText();
+    navigator.clipboard.writeText(shareText)
+      .then(() => {
+        toast.success('Results copied to clipboard!');
+      })
+      .catch(() => {
+        toast.error('Failed to copy to clipboard.');
+      });
+  };
+
   return (
     <div className="w-full max-w-4xl mx-auto p-4">
       {gameStatus === "playing" && (
@@ -291,8 +325,13 @@ export default function SoftwareWordle() {
           <CheckCircle2 className="h-4 w-4 text-green-600" />
           <AlertTitle className="text-green-800">Congratulations!</AlertTitle>
           <AlertDescription className="text-green-700">
-            You guessed the correct term: <strong>{targetTerm?.name}</strong> in {guesses.length} attempts.<br />
-            Come back tomorrow for a new challenge.
+            <p>
+              You guessed the correct term: <strong>{targetTerm?.name}</strong> in {guesses.length} attempts.<br />
+              Come back tomorrow for a new challenge.
+            </p>
+            <Button onClick={handleShare} className="mt-2 bg-green-600 hover:bg-green-700">
+              <Share className="w-2 h-2" /> Share
+            </Button>
           </AlertDescription>
         </Alert>
       )}
@@ -302,8 +341,13 @@ export default function SoftwareWordle() {
           <AlertCircle className="h-4 w-4 text-red-600" />
           <AlertTitle className="text-red-800">Game Over</AlertTitle>
           <AlertDescription className="text-red-700">
-            You didn’t guess correctly after {maxAttempts} attempts. The correct term was: <strong>{targetTerm?.name}</strong><br />
-            Come back tomorrow for a new challenge.
+            <p>
+              You didn’t guess correctly after {maxAttempts} attempts. The correct term was: <strong>{targetTerm?.name}</strong><br />
+              Come back tomorrow for a new challenge.
+            </p>
+            <Button onClick={handleShare} className="mt-2 bg-red-600 hover:bg-red-700">
+              <Share className="w-2 h-2" /> Share
+            </Button>
           </AlertDescription>
         </Alert>
       )}
