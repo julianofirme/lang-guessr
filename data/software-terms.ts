@@ -297,4 +297,184 @@ export const softwareTerms: SoftwareTerm[] = [
     company: "Haskell Committee",
     codeSnippet: `greet name = do\n  let msg = "Hello, " ++ name\n  putStrLn msg\n  return msg\n`
   },
+  {
+    name: "Livewire",
+    releaseYear: 2019,
+    type: "Framework",
+    paradigm: "Real-time",
+    domain: "Web Development",
+    company: "Caleb Porzio",
+    codeSnippet: `public $message = 'Hello, World!';\n// Blade: {{ $message }}\n<!-- Live updates -->\n`
+  },
+  {
+    name: "HTMX",
+    releaseYear: 2020,
+    type: "Framework",
+    paradigm: "HTML-centric",
+    domain: "Web Development",
+    company: "Big Sky Software",
+    codeSnippet: `<div hx-get="/hello">\n  Hello, World!\n</div>\n<!-- AJAX trigger -->\n`
+  },
+  {
+    name: "Flutter",
+    releaseYear: 2017,
+    type: "Framework",
+    paradigm: "Reactive",
+    domain: "Mobile Development",
+    company: "Google",
+    codeSnippet: `class MyApp extends StatelessWidget {\n  Widget build(context) {\n    return Text('Hello, World!');\n  }\n}`
+  },
+  {
+    name: "Phoenix",
+    releaseYear: 2014,
+    type: "Framework",
+    paradigm: "MVC",
+    domain: "Web Development",
+    company: "Chris McCord",
+    codeSnippet: `def index(conn, _params) do\n  render(conn, "Hello, World!")\nend\n# Controller\n`
+  },
+  {
+    name: "SQL",
+    releaseYear: 1974,
+    type: "Programming Language",
+    paradigm: "Declarative",
+    domain: "Database",
+    company: "Various",
+    codeSnippet: `SELECT 'Hello, ' || name AS greeting\nFROM users\nWHERE id = 1;\n-- Returns greeting string\n`
+  },
+  {
+    name: "OCaml",
+    releaseYear: 1996,
+    type: "Programming Language",
+    paradigm: "Functional",
+    domain: "General Purpose",
+    company: "INRIA",
+    codeSnippet: `let greet name =\n  let msg = "Hello, " ^ name in\n  print_endline msg;\n  msg\n`
+  },
+  {
+    name: "Julia",
+    releaseYear: 2012,
+    type: "Programming Language",
+    paradigm: "Multi-paradigm",
+    domain: "Scientific Computing",
+    company: "Julia Computing",
+    codeSnippet: `function greet(name)\n  msg = "Hello, $name"\n  println(msg)\n  return msg\nend\n`
+  },
+  {
+    name: "Clojure",
+    releaseYear: 2007,
+    type: "Programming Language",
+    paradigm: "Functional",
+    domain: "General Purpose",
+    company: "Rich Hickey",
+    codeSnippet: `(defn greet [name]\n  (let [msg (str "Hello, " name)]\n    (println msg)\n    msg))\n`
+  },
+  {
+    name: "Assembly",
+    releaseYear: 1947,
+    type: "Programming Language",
+    paradigm: "Low-level",
+    domain: "Systems Programming",
+    company: "Various",
+    codeSnippet: `mov ah, 09h\nlea dx, msg\nint 21h\nret\n`
+  },
+  {
+    name: "Erlang",
+    releaseYear: 1986,
+    type: "Programming Language",
+    paradigm: "Concurrent",
+    domain: "Telecommunications",
+    company: "Ericsson",
+    codeSnippet: `-module(hello).\n-export([greet/1]).\ngreet(Name) -> io:format("Hello, ~s~n", [Name]).\n`
+  },
+  {
+    name: "Elixir",
+    releaseYear: 2011,
+    type: "Programming Language",
+    paradigm: "Functional",
+    domain: "Web Development",
+    company: "José Valim",
+    codeSnippet: `def greet(name) do\n  msg = "Hello, #{name}"\n  IO.puts(msg)\n  msg\nend\n`
+  },
+  {
+    name: "F#",
+    releaseYear: 2005,
+    type: "Programming Language",
+    paradigm: "Functional",
+    domain: "General Purpose",
+    company: "Microsoft",
+    codeSnippet: `let greet name =\n  let msg = "Hello, " + name\n  printfn "%s" msg\n  msg\n`
+  },
+  {
+    name: "Lisp",
+    releaseYear: 1958,
+    type: "Programming Language",
+    paradigm: "Functional",
+    domain: "General Purpose",
+    company: "MIT",
+    codeSnippet: `(defun greet (name)\n  (let ((msg (concatenate 'string "Hello, " name)))\n    (print msg)\n    msg))\n`
+  },
+  {
+    name: "Fortran",
+    releaseYear: 1957,
+    type: "Programming Language",
+    paradigm: "Imperative",
+    domain: "Scientific Computing",
+    company: "IBM",
+    codeSnippet: `subroutine greet(name)\n  character*(*) :: name\n  print *, 'Hello, ', name\nend subroutine\n`
+  },
+  {
+    name: "COBOL",
+    releaseYear: 1959,
+    type: "Programming Language",
+    paradigm: "Imperative",
+    domain: "Business Applications",
+    company: "CODASYL",
+    codeSnippet: `DISPLAY 'Hello, ' NAME\nMOVE 'Hello, ' TO MSG\nADD 1 TO COUNTER\nDISPLAY MSG\n`
+  },
+  {
+    name: "Perl",
+    releaseYear: 1987,
+    type: "Programming Language",
+    paradigm: "Multi-paradigm",
+    domain: "General Purpose",
+    company: "Larry Wall",
+    codeSnippet: `sub greet {\n  my $name = shift;\n  print "Hello, $name\\n";\n  return "Hello, $name";\n}`
+  },
+  {
+    name: "Lua",
+    releaseYear: 1993,
+    type: "Programming Language",
+    paradigm: "Multi-paradigm",
+    domain: "Embedded Systems",
+    company: "PUC-Rio",
+    codeSnippet: `function greet(name)\n  local msg = "Hello, " .. name\n  print(msg)\n  return msg\nend\n`
+  },
+  {
+    name: "Dart",
+    releaseYear: 2011,
+    type: "Programming Language",
+    paradigm: "Multi-paradigm",
+    domain: "Web Development",
+    company: "Google",
+    codeSnippet: `String greet(String name) {\n  var msg = 'Hello, $name';\n  print(msg);\n  return msg;\n}`
+  },
+  {
+    name: "Objective-C",
+    releaseYear: 1984,
+    type: "Programming Language",
+    paradigm: "Object-oriented",
+    domain: "Mobile Development",
+    company: "Apple",
+    codeSnippet: `- (NSString *)greet:(NSString *)name {\n  NSString *msg = [@"Hello, " stringByAppendingString:name];\n  NSLog(@"%@", msg);\n  return msg;\n}`
+  },
+  {
+    name: "Ada",
+    releaseYear: 1980,
+    type: "Programming Language",
+    paradigm: "Multi-paradigm",
+    domain: "Systems Programming",
+    company: "U.S. Department of Defense",
+    codeSnippet: `procedure Greet(Name : String) is\nbegin\n  Put_Line("Hello, " & Name);\nend Greet;\n`
+  },
 ];
