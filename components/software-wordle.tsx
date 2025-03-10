@@ -79,7 +79,7 @@ export default function SoftwareWordle() {
       setGuesses([]);
       setGameStatus("playing");
     }
-  }, []);
+  }, []); 
 
   // Save game state to local storage when guesses or gameStatus changes
   useEffect(() => {
@@ -318,7 +318,8 @@ export default function SoftwareWordle() {
             </Button>
             <Button
               onClick={() => setShowHistoricalHint(true)}
-              className="bg-zinc-700 text-white px-4 py-2 rounded-md"
+              className="px-4 py-2 rounded-md"
+              variant={"outline"}
             >
               Show historical hint
             </Button>
