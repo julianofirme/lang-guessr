@@ -260,7 +260,11 @@ export default function SoftwareWordle() {
       return `${yearFeedback} ${typeFeedback} ${paradigmFeedback} ${domainFeedback} ${companyFeedback}`;
     }).join('\n');
 
-    return `Lang Guessr - ${date}\nGuesses: ${guessesText}\n\n${grid}`;
+    return `Lang Guessr - ${date}\n` +
+           `Code Cracked: ${guessesText}\n` +
+           `Master the Language Matrix!\n\n` +
+           `${grid}\n\n` +
+           `Debug this puzzle - Beat my stack!`;
   };
 
   const handleShare = () => {
